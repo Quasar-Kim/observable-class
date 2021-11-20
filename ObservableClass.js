@@ -105,16 +105,23 @@ export class WaitEntry {
   }
 
   // 사용 가능한 컨디션들
-  toFulfill(condition) {
-    this.cancel = this.observableProp.registerCallback(condition, newVal => {
-        this.resolve(newVal);
+  toFulfill(condition, checkImmediate = true) {
+    const conditionMetCallback = newVal => {
+      this.resolve(newVal);
 
-        if (this.once) {
-          this.cancel()
-          // promise처럼 작동할때처럼 필요, once === false인 경우 항상 resolved === false
-          this.resolved = true
-        }
-      }, () => {
+      if (this.once) {
+        this.cancel()
+        // promise처럼 작동할때처럼 필요, once === false인 경우 항상 resolved === false
+        this.resolved = true
+      }
+    }
+
+    if (checkImmediate) {
+      const currentVal = this.observableProp.val
+      if (condition(currentVal)) conditionMetCallback(currentVal)
+    }
+
+    this.cancel = this.observableProp.registerCallback(condition, conditionMetCallback, () => {
         this.unmatchedCallback()
       });
 
@@ -133,7 +140,7 @@ export class WaitEntry {
   }
 
   toBeChanged() {
-    return this.toFulfill(waitToBeChanged);
+    return this.toFulfill(waitToBeChanged, false);
   }
 }
 
@@ -181,6 +188,37 @@ export function updateOn(observableProp) {
       }
     }
   }
+}
+
+export function waitAll(waitEntriesFn) {
+  let resolveFn
+  const promise = new Promise(resolve => resolveFn = resolve)
+
+  // 각 waitEntry 별 resolve 여부 나타냄
+  let fulfilledWaitEntries = 0
+  const waitEntries = new Set()
+
+  // waitEntry 받고...
+  waitEntriesFn(observableProp => {
+    const waitEntry = new WaitEntry({ observableProp, once: false, unmatchedCallback: () => fulfilledWaitEntries-- })
+
+    // 맞으면 fulfilledWaitEntry 추가
+    waitEntry.then(() => {
+      fulfilledWaitEntries++
+      if (fulfilledWaitEntries === waitEntries.size) {
+        // 정리
+        for (const entry of waitEntries.values()) {
+          entry.cancel()
+        }
+        resolveFn()
+      }
+    })
+
+    waitEntries.add(waitEntry)
+    return waitEntry
+  })
+
+  return promise
 }
 
 export default class ObservableClass {

@@ -19,7 +19,7 @@ describe('wait()', () => {
     })
 
     // condition 기능
-    it('should resolve when condition passed to toFulfill() matches', done => {
+    it('should resolve when condition passed to toFulfill() meets', done => {
         const prop = new ObservableProp()
         wait(prop).toFulfill(val => typeof val === 'string').then(() => done())
         prop.set('hello')
@@ -38,6 +38,22 @@ describe('wait()', () => {
         const prop = new ObservableProp()
         wait(prop).toBeChanged().then(() => done())
         prop.set('hello')
+    })
+    it('should resolve immediately if condition passed to toFulfill() meets with value', async () => {
+        const prop = new ObservableProp()
+        prop.set(1)
+        await wait(prop).toFulfill(val => typeof val === 'number')
+    })
+    it('should not resolve immediately if immediate option passed to toFulfill() is false', done => {
+        const prop = new ObservableProp()
+        prop.set(1)
+        wait(prop).toFulfill(val => typeof val === 'number', false).then(newVal => {
+            expect(newVal).to.equal(2)
+            done()
+        })
+
+        // 만약 immediate = true였으면 아래 코드는 then 안의 코드를 실행하지 않음
+        prop.set(2)
     })
 
     // 체이닝 구현용 기능
