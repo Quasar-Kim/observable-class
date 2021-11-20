@@ -1,0 +1,22 @@
+{
+  "name": "observable-class",
+  "version": "0.1.0",
+  "description": "Wait for conditions to meet, not for an event.",
+  "main": "ObservableClass.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Quasar-Kim/observable-class.git"
+  },
+  "author": "Quasar-Kim",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Quasar-Kim/observable-class/issues"
+  },
+  "homepage": "https://github.com/Quasar-Kim/observable-class#readme"
+}
